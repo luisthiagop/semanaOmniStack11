@@ -9,7 +9,6 @@ module.exports = {
 
     async create(request, response, next){
         const {title, description, value} = request.body;
-
         const ong_id = request.headers.authorization;
 
         try {
@@ -19,10 +18,29 @@ module.exports = {
                 value,
                 ong_id
             });
-
+            
             return response.json({id});
         } catch(err) {
             next(err);
         }        
+    },
+
+    async delete(request, response, next){
+        const {id} = request.params;
+        const ong_id = request.headers.authorization;
+
+        const incident = await connection('incidents')
+            .where('id', id)
+            .select('ong_id')
+            .first();
+
+        if(incident.ong_id != ong_id){
+            return response.status(401).json({erro: 'Operation not permited'});
+        }
+
+        await connection('incidents').where('id', id).delete();
+
+        return response.status(204).send();
     }
 }
+
